@@ -5,13 +5,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/c-sto/goWMIExec/pkg/wmiexec"
+	"github.com/C-Sto/goWMIExec/pkg/wmiexec"
 )
 
 func main() {
 
 	var command, target, username, password, hash, domain, clientHost string
-	flag.StringVar(&target, "target", "", "Target. Include port (:135)")
+	flag.StringVar(&target, "target", "", "Target")
 	flag.StringVar(&username, "username", "", "Username to auth as")
 	flag.StringVar(&password, "password", "", "password")
 	flag.StringVar(&hash, "hash", "", "hash")
@@ -25,13 +25,20 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		clientHost = strings.ToUpper(clientHost)
-		if len(clientHost) > 16 {
-			clientHost = clientHost[:15]
-		}
 	}
 
-	err := wmiexec.WMIExec(target, username, password, hash, domain, command, clientHost)
+	if target == "" || (password == "" && hash == "") {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	if !strings.Contains(target, ":") {
+		//fmt.Printf("Bad target specified, requires port (usually 135). expected: 127.0.0.1:135, got %s", target)
+		//os.Exit(1)
+		target = target + ":135"
+	}
+
+	err := wmiexec.WMIExec(target, username, password, hash, domain, command, clientHost, nil)
 	if err != nil {
 		panic(err)
 	}
